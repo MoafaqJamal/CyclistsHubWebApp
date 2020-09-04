@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>CyclistsHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css">
+
+  <style>
+  #map {
+    height: 350px;
+    width: 100%;
+  }
+  #mapid {
+    height: 180px;
+    width: 100%;
+  }
+  i.icon-blue {
+    color: #19297b;
+  }
+  @media only screen and (max-width: 600px) {
+    li img {
+      width: 100%;
+    }
+  }
+  </style>
+</head>
+<body>
+
+  <!--navbar-->
+  <nav class="z-depth-0 grey lighten-4">
+    <div class="nav-wrapper container">
+      <a class="brand-logo">
+        <img src="https://s3712755-cw2-s3.s3.amazonaws.com/logo.png" style="width: 180px; margin-top: 10px;">
+      </a>
+      <!--https://materializecss.com/navbar.html-->
+      <a href="#" class="sidenav-trigger" data-target="mobile-nav">
+        <i class="material-icons icon-blue">menu</i>
+      </a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="#" class="indigo-text modal-trigger" data-target="modal-map">Maps</a></li>
+        <li><a href="#" class="indigo-text modal-trigger" data-target="modal-login">Admin</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <ul class="sidenav" id="mobile-nav">
+    <li><a href="#" class="indigo-text modal-trigger" data-target="modal-map">Maps</a></li>
+    <li><a href="#" class="indigo-text modal-trigger" data-target="modal-login">Admin</a></li>
+  </ul>
+
+  </div>
+
+  <!--map modal-->
+  <div id="modal-map" class="modal">
+    <div class="modal-content">
+      <button type="button" class="modal-close right">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <br>
+      <select class="browser-default" name="type" id="menu" onchange="initMap()">
+        <option value="" disabled selected>Choose an option</option>
+        <option value="BikeShare">Bike Share</option>
+        <option value="BikeShop">Bike Shop</option>
+        <option value="DrinkingFountain">Drinking Fountain</option>
+      </select>
+      <div id="map"></div>
+    </div>
+  </div>
+
+
+
+
+
+  <!--login modal-->
+  <div id="modal-login" class="modal">
+    <div class="modal-content">
+      <button type="button" class="modal-close right">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <h4>Admin Login</h4><br>
+      <form id="login-form">
+        <div class="input-field">
+          <input type="email" id="login-email" placeholder="Enter Admin Email" class="validate" required />
+        </div>
+        <div class="input-field">
+          <input type="password" id="login-password" placeholder="Enter Admin Password" required />
+        </div>
+        <button class="btn blue darken-4 z-depth-2">Login
+          <i class="material-icons right">send</i>
+        </button>
+        <p id="loginResp"></p>
+        <button class="btn green darken-4 z-depth-2 right" id="logout" style="display: none;">Logout
+          <i class="material-icons right">logout</i>
+        </button>
+        <br><br>
+        <a id="addContentBtn" class="btn blue darken-4 z-depth-2 modal-trigger" style="width: 100%; display: none;"
+          data-target="modal-create">Add Content</a>
+      </form>
+    </div>
+  </div>
+
+
+
+  <!--add content modal-->
+  <div id="modal-create" class="modal">
+    <div class="modal-content">
+      <button type="button" class="modal-close right">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <h4>Add Content</h4><br />
+      <form id="addContent-form" style="display: none;">
+        <div class="input-field">
+          <input type="text" id="title" placeholder="Add Title" required />
+        </div>
+        <div class="input-field">
+          <textarea id="description" class="materialize-textarea" placeholder="Add Description" rows="4" cols="40"
+            required></textarea>
+        </div>
+        <div class="row">
+          <div class="input-field col s6">
+            <input type="text" id="locationLat" placeholder="Add Location Lat" required />
+          </div>
+          <div class="input-field col s6">
+            <input type="text" id="locationLng" placeholder="Add Location Lon" required />
+          </div>
+        </div>
+        <div class="file-field input-field">
+          <div class="btn green darken-4 z-depth-2">
+            <span>Attach an image</span>
+            <input type="file" id="fileupload" />
+          </div>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text">
+            <progress value="0" max="100" id="progress" style="width:100%">0%</progress>
+          </div>
+        </div>
+        <button class="btn blue darken-4 z-depth-2 right">Submit
+          <i class="material-icons right">send</i>
+        </button>
+        <br>
+        <br>
+      </form>
+
+      <input type="text" id="post2Delete" placeholder="Add Post ID to delete" />
+      <button id="btnPost2Delete" class="btn blue darken-4 z-depth-2 right">Delete Post</button>
+      <br><br>
+    </div>
+  </div>
+
+
+
+  <!-- events feed
+    Adapted from
+  https://materializecss.com/collapsible.html
+  https://codepen.io/jasonpaul/pen/NxjvjW
+  -->
+  <div class="container" style="margin-top: 40px;">
+    <ul class="collapsible popout">
+      <li class='active'>
+        <div class="collapsible-header grey lighten-4 flow-text">Forcast Now in Your location!</div>
+        <div class="collapsible-body white">
+          <div class="center indigo-text" id="weather"></div>
+          <h5 class="center" id="windy"></h5>
+        </div>
+      </li>
+    </ul>
+
+    <blockquote>Cycling Events Around You | Click on Map or Titles!</blockquote>
+    <div id="mapid"></div>
+
+    <ul class="collapsible eventsToShow">
+      <!-- Adding from DB, code in app.js -->
+    </ul>
+  </div>
+
+  <footer class="page-footer grey lighten-4">
+    <div class="footer-copyright grey">
+      <div class="container">
+        © 2019 Copyright s3712755 @ RMIT
+        <a class="grey-text text-lighten-4 right" href="https://www.linkedin.com/in/moafaq/">Follow me on Linkedin</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    //setup materialize components
+    document.addEventListener('DOMContentLoaded', function () {
+
+      weatherNow();
+      displayEvents();
+      firebaseAuth();
+
+      var operateModals = document.querySelectorAll('.modal');
+      M.Modal.init(operateModals);
+
+      var operateCollapsible = document.querySelectorAll('.collapsible');
+      M.Collapsible.init(operateCollapsible);
+
+      var operateSidenav = document.querySelectorAll('.sidenav');
+      M.Sidenav.init(operateSidenav);
+
+      var operateSelectTag = document.querySelectorAll('select');
+      M.FormSelect.init(operateSelectTag);
+    });
+  </script>
+
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+   <!-- calling Firebase services used -->
+  <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.2.0/firebase-storage.js"></script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQqXzE9r5h9VYoKuQ17pFQ5eIX1U4DxNM&libraries=places&callback=initMap"></script>
+
+  <script src='app.min.js'></script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+runtime: php55
+api_version: 1
+
+handlers:
+- url: /index.html
+  script: index.html
+- url: /app.min.js
+  script: app.min.js
+- url: /.*
+  script: index.html
